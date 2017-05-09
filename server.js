@@ -4,7 +4,7 @@ var bodyParser = require('body-parser');
 var mongo = require('mongodb');
 var assert = require('assert');
 var router = express.Router();
-
+var path = require('path');
 var url = 'mongodb://localhost:27017/testDatabase'; //test is the database
 //Express
 var app = express();
@@ -12,6 +12,21 @@ var app = express();
 // parse application/json
 //app.use(bodyParser.json())
 
+
+//Specific files like js files
+app.get('/pages/:subfolder/:file', function (req, res) {
+    res.sendFile(path.join(__dirname + '/pages/' + req.params.subfolder + '/' + req.params.file));
+});
+
+//index.html files
+app.get('/pages/:subfolder', function (req, res) {
+    res.sendFile(path.join(__dirname + '/pages/' + req.params.subfolder + '/index.html'));
+});
+
+//for resources like bootstrap
+app.get('/resources/:subfolder/:subsubfolder/:file', function (req, res) {
+    res.sendFile(path.join(__dirname + '/resources/' + req.params.subfolder + '/' + req.params.subsubfolder + '/' + req.params.file));
+});
 
 
 router.get('/', function (req, res, next) {
