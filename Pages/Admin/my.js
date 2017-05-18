@@ -37,9 +37,8 @@ var button = new bsjs.button({
 })
 var panel = new bsjs.panel({
     title: 'My Panel'
-    , addTo: bsjs.body
 })
-panel.body.add(button)
+
 var myiframe = new bsjs.iframe({
     addTo: bsjs.body
 })

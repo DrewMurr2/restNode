@@ -197,11 +197,88 @@ var BSJS = function (name) {
         var thisiframe = this
         this.main = new thisBSJS.tag()
         this.name = 'iframe_' + this.main.id
+        this.vars = function () { return document.getElementById(thisiframe.main.id).contentWindow }
         this.create = function () {
             return '<iframe id="' + thisiframe.main.id + '" height="100%" width="100%" src="' + thisiframe.optionalSource + '" width name="' + thisiframe.name + '"></iframe>'
         }
         this.setSource = function (src) {
             thisiframe.main.jQ().attr('src', src)
+        }
+        if (options.addTo) options.addTo.add(this)
+        return this
+    }
+    this.table = function (options) {
+        var thisTable = this
+        if (!options) options = {}
+        if (options.data) this.data = options.data
+        else this.data = [{ column1: [0, 1, 2] }, { column2: [3, 4, 5, 9] }, { column3: [6, 7, 8] }]
+
+        this.main = new thisBSJS.tag()
+        this.create = function () {
+            return '\
+<div id="' + thisTable.main.id + '" class="table-responsive">' + thisTable.createInside() + '\
+  </div>'
+        }
+        this.createInside = function () {
+            var exampleData = function (t) {
+                if (jQuery.type(t.data) === "object") return "{column1: [1,2,3], column2: [3,4,5]}" //This is for this structure {column1: [1,2,3], column2: [3,4,5]}
+                else if (jQuery.type(t.data[0][Object.keys(t.data[0])[0]]) === "array") return "[{column1 : [1,2,3]},{column2: [3,4,5]}]" //This is for this structure [{column1 : [1,2,3]},{column2: [3,4,5]}] 
+                else return "[{column1:1,column2:3},{column1:2,column2:4},{column1:3,column2:5}]" //This is for this structure [{column1:1,column2:3},{column1:2,column2:4},{column1:3,column2:5}]  
+            }(thisTable)
+
+
+            return '\
+<table class="table">\
+    <thead>\
+      <tr>' + function (data) {
+                    var addColumn = function (index, name) {
+                        return '<th colnum="' + index + '" col="' + name + '">' + name + '</th>'
+                    }
+                    var str = ''
+                    switch (exampleData) {
+                        case "{column1: [1,2,3], column2: [3,4,5]}":
+
+                        case "[{column1 : [1,2,3]},{column2: [3,4,5]}]":
+                            data.forEach(function (colobj) { str += addColumn(data.indexOf(colobj), Object.keys(colobj)[0]) })
+                        case "[{column1:1,column2:3},{column1:2,column2:4},{column1:3,column2:5}]":
+
+                    }
+                    return str
+                }(thisTable.data) + '\
+      </tr>\
+    </thead>\
+    <tbody>' + function (data) {
+                    var addRowItem = function (item) {
+                        return '<td>' + function () {
+                            if (item === 0) return item
+                            else return item || ''
+                        }() + '</td>'
+                    }
+                    var str = ''
+                    switch (exampleData) {
+                        case "{column1: [1,2,3], column2: [3,4,5]}":
+
+                        case "[{column1 : [1,2,3]},{column2: [3,4,5]}]":
+                            var maxRows = 0
+                            data.forEach(function (colobj) { if (colobj[Object.keys(colobj)[0]].length > maxRows) maxRows = colobj[Object.keys(colobj)[0]].length })
+                            for (i = 0; i < maxRows; i++) {
+                                str += '<tr>'
+                                data.forEach(function (colobj) { str += addRowItem(colobj[Object.keys(colobj)[0]][i]) })
+                                str += '</tr>'
+                            }
+
+                        case "[{column1:1,column2:3},{column1:2,column2:4},{column1:3,column2:5}]":
+
+                    }
+
+                    return str
+                }(thisTable.data) + '\
+    </tbody>\
+  </table>'
+        }
+        this.refresh = function () {
+            thisTable.main.clear()
+            thisTable.main.set(this.createInside())
         }
         if (options.addTo) options.addTo.add(this)
         return this
