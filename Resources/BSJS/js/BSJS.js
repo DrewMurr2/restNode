@@ -6,6 +6,7 @@ var BSJS = function (name) {
         return 'BSJS' + thisBSJS.index++
     }
     this.functions = {}
+    this.objects = []
     this.nav = {
         bar: function (options) {
             if (!options) options = {}
@@ -207,8 +208,14 @@ var BSJS = function (name) {
         if (options.addTo) options.addTo.add(this)
         return this
     }
+    this.addObject = function (obj) {
+        obj.objectIndex = thisBSJS.objects.length
+        thisBSJS.objects[obj.objectIndex] = obj
+    }
     this.table = function (options) {
         var thisTable = this
+        thisTable.itemIndex = 0
+        thisBSJS.addObject(this)
         if (!options) options = {}
         if (options.data) this.data = options.data
         else this.data = [{ column1: [0, 1, 2] }, { column2: [3, 4, 5, 9] }, { column3: [6, 7, 8] }]
@@ -219,12 +226,41 @@ var BSJS = function (name) {
 <div id="' + thisTable.main.id + '" class="table-responsive">' + thisTable.createInside() + '\
   </div>'
         }
+
+        this.editItem = function (objIndex, itemIndx, colname, rowNum) {
+            if (document.getElementById('obj_' + objIndex + '_edit_' + itemIndx).style.display == "none") {
+                $(document.getElementById('obj_' + objIndex + '_edit_' + itemIndx)).show()
+                $(document.getElementById('obj_' + objIndex + '_td_' + itemIndx)).hide()
+                setTimeout(function () {
+                    window.onclick = function (event) {
+                        if (event.target != document.getElementById('obj_' + objIndex + '_edit_' + itemIndx)) {
+                            thisTable.saveItem(colname, rowNum, document.getElementById('obj_' + objIndex + '_edit_' + itemIndx).value)
+                        }
+                    }
+                }, 100)
+            }
+        }
+        this.saveItem = function (colname, rowNum, val) {
+            var exampleData = thisTable.returnExampleData(thisTable)
+            switch (exampleData) {
+                case "{column1: [1,2,3], column2: [3,4,5]}":
+
+                case "[{column1 : [1,2,3]},{column2: [3,4,5]}]":
+                    thisTable.data.forEach(function (colN) { if (colN[colname]) colN[colname][rowNum] = val })
+                    thisTable.refresh()
+                case "[{column1:1,column2:3},{column1:2,column2:4},{column1:3,column2:5}]":
+
+                    console.log(colname, rowNum, val)
+            }
+            window.onclick = undefined
+        }
+        this.returnExampleData = function (t) {
+            if (jQuery.type(t.data) === "object") return "{column1: [1,2,3], column2: [3,4,5]}" //This is for this structure {column1: [1,2,3], column2: [3,4,5]}
+            else if (jQuery.type(t.data[0][Object.keys(t.data[0])[0]]) === "array") return "[{column1 : [1,2,3]},{column2: [3,4,5]}]" //This is for this structure [{column1 : [1,2,3]},{column2: [3,4,5]}] 
+            else return "[{column1:1,column2:3},{column1:2,column2:4},{column1:3,column2:5}]" //This is for this structure [{column1:1,column2:3},{column1:2,column2:4},{column1:3,column2:5}]  
+        }
         this.createInside = function () {
-            var exampleData = function (t) {
-                if (jQuery.type(t.data) === "object") return "{column1: [1,2,3], column2: [3,4,5]}" //This is for this structure {column1: [1,2,3], column2: [3,4,5]}
-                else if (jQuery.type(t.data[0][Object.keys(t.data[0])[0]]) === "array") return "[{column1 : [1,2,3]},{column2: [3,4,5]}]" //This is for this structure [{column1 : [1,2,3]},{column2: [3,4,5]}] 
-                else return "[{column1:1,column2:3},{column1:2,column2:4},{column1:3,column2:5}]" //This is for this structure [{column1:1,column2:3},{column1:2,column2:4},{column1:3,column2:5}]  
-            }(thisTable)
+            var exampleData = thisTable.returnExampleData(thisTable)
 
 
             return '\
@@ -248,11 +284,9 @@ var BSJS = function (name) {
       </tr>\
     </thead>\
     <tbody>' + function (data) {
-                    var addRowItem = function (item) {
-                        return '<td>' + function () {
-                            if (item === 0) return item
-                            else return item || ''
-                        }() + '</td>'
+                    var addRowItem = function (item, colname, rownum) {
+                        if (item !== 0 && !item) item = ''
+                        return '<td onClick="' + thisBSJS.name + '.objects[' + thisTable.objectIndex + '].editItem(' + thisTable.objectIndex + ',' + ++thisTable.itemIndex + ",'" + colname + "'," + rownum + ')"><span id="obj_' + thisTable.objectIndex + '_td_' + thisTable.itemIndex + '">' + item + '</span><span><input type="text" style="display:none;position:absolute"  id="obj_' + thisTable.objectIndex + '_edit_' + thisTable.itemIndex + '" value="' + item + '"></span></td>'
                     }
                     var str = ''
                     switch (exampleData) {
@@ -263,7 +297,7 @@ var BSJS = function (name) {
                             data.forEach(function (colobj) { if (colobj[Object.keys(colobj)[0]].length > maxRows) maxRows = colobj[Object.keys(colobj)[0]].length })
                             for (i = 0; i < maxRows; i++) {
                                 str += '<tr>'
-                                data.forEach(function (colobj) { str += addRowItem(colobj[Object.keys(colobj)[0]][i]) })
+                                data.forEach(function (colobj) { str += addRowItem(colobj[Object.keys(colobj)[0]][i], Object.keys(colobj)[0], i) })
                                 str += '</tr>'
                             }
 
