@@ -178,7 +178,15 @@ var BSJS = function (name) {
             return thisTag.jQ.html()
         }
         this.add = function (obj) {
-            thisTag.jQ().append(obj.create())
+            var crt = obj.create()
+            if (crt.html) {
+                console.log('this.add')
+                thisTag.jQ().append(crt.html)
+                if (crt.callback) crt.callback()
+            } else {
+                console.log('No html')
+                thisTag.jQ().append(crt)
+            }
         }
         this.addAll = function (arr) {
             arr.forEach(function (obj) {
