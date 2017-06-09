@@ -1,7 +1,7 @@
+
 BSJS.tag = function (options) {
     var thisTag = this
     this.id = BSJS.newId()
-    BSJS.objects[this.id] = this
     this.element = function () {
         return document.getElementById(thisTag.id)
     }
@@ -20,6 +20,9 @@ BSJS.tag = function (options) {
     this.set = function (str) {
         thisTag.jQ().html(str)
     }
+    this.setonClick = function (fnc) {
+        BSJS.functions[thisTag.id] = fnc
+    }
     this.get = function () {
         return thisTag.jQ.html()
     }
@@ -32,32 +35,27 @@ BSJS.tag = function (options) {
         if (itemindex > -1) thisTag.contents.splice(itemindex, 1);
         thisTag.contents.push(obj)
         if (thisTag.element()) { //If this tag doesn't exists it just stores the item in the contents array
-            thisTag.apnd(obj)
-        }
-    }
-    this.apnd = function (obj) {
-        var crt = obj.create()
-        if (crt.html) {
-            thisTag.jQ().append(crt.html)
-            if (crt.callback) crt.callback()
-        }
-        else {
-            thisTag.jQ().append(crt)
+            var crt = obj.create()
+            if (crt.html) {
+                thisTag.jQ().append(crt.html)
+                if (crt.callback) crt.callback()
+            } else {
+                thisTag.jQ().append(crt)
+            }
         }
     }
     this.addAll = function (arr) {
         arr.forEach(function (obj) {
-            thisTag.apnd(obj)
+            thisTag.add(obj)
         })
     }
     this.returnHTMLtag = function () {
-        return 'id="' + thisTag.id + '" ' + function () {
-            if (thisTag.onClick) return 'onClick="BSJS.objects[' + "'" + thisTag.id + "'" + '].onClick(BSJS.objects[' + "'" + thisTag.id + "'" + '].params)"'
-            else return ''
-        }()
+        return 'id="' + thisTag.id + '" onClick="' + BSJS.name + '.functions[' + "'" + thisTag.id + "'" + ']()"'
     }
-    this.params = {}
+    this.setonClick(function () { })
     var optType = jQuery.type(options)
+    console.log('options just before switch', options)
+    console.log('optType', optType)
     switch (optType) {
         case "undefined":
             options = {}
@@ -69,12 +67,7 @@ BSJS.tag = function (options) {
             thisTag.contents = options
             break;
         case "object":
-            if (options.onClick) thisTag.onClick = options.onClick
-            if (options.create) thisTag.add(options)
-            if (options.contents) thisTag.contents = options.contents
-            if (options.params) thisTag.params = options.params
-            if (options.dataConnection) thisTag.add(new BSJS.span(BSJS.returnDataConnection(options.dataConnection).marker()))
-
+            thisTag.add(options)
     }
     return this
 }

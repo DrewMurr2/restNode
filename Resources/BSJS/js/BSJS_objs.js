@@ -21,37 +21,52 @@ BSJS.nav = {
   </div>\
 </nav>'
         var thisBar = BSJS.inherit(this, new BSJS.obj(options))
+
+
         return this
     }
     , dropDownGroup: function (options) {
         if (!options) options = {}
-        options.template = '\
-           <li  {{main.returnHTMLtag}} class="dropdown">\
-          <a   {{title.returnHTMLtag}} class="dropdown-toggle" data-toggle="dropdown" href="#"><span class="caret"></span></a>\
-          <ul  {{body.returnHTMLtag}}  class="dropdown-menu">\
+        if (options.title) this.optionalTitle = options.title
+        else this.optionalTitle = ''
+        this.main = new BSJS.tag()
+        this.title = new BSJS.tag()
+        this.body = new BSJS.tag()
+        this.create = function () {
+            return '\
+        <li  ' + this.main.returnHTMLtag() + ' class="dropdown">\
+          <a  ' + this.title.returnHTMLtag() + '  class="dropdown-toggle" data-toggle="dropdown" href="#">' + this.optionalTitle + '<span class="caret"></span></a>\
+          <ul  ' + this.body.returnHTMLtag() + ' class="dropdown-menu">\
           </ul>\
-        </li>\
-'
-        var thisDropDownGroup = BSJS.inherit(this, new BSJS.obj(options))
-        return this
+        </li>'
+        }
+        if (options.addTo) options.addTo.add(this)
     }
     , dropDownItem: function (options) {
+        this.body = new BSJS.tag()
         if (!options) options = {}
-        options.template = ' <li {{main.returnHTMLtag}}><a {{body.returnHTMLtag}} href="#"></a></li>'
-        var thisDropDownItem = BSJS.inherit(this, new BSJS.obj(options))
-        return this
+        if (options.title) this.optionalTitle = options.title
+        else this.optionalTitle = ''
+        if (options.onClick) this.body.setonClick(options.onClick)
+        this.create = function () {
+            return '\
+  <li ' + this.body.returnHTMLtag() + '><a href="#">' + this.optionalTitle + '</a></li>'
+        }
+        if (options.addTo) options.addTo.add(this)
     }
 }
+
 BSJS.panel = function (options) {
     if (!options) options = {}
     options.template = '\
 <div {{main.returnHTMLtag}} class="panel panel-default" >\
-  <div {{heading.returnHTMLtag}} class="panel-heading"></div>\
+  <div {{heading.returnHTMLtag}} class="panel-heading">Panel Heading</div>\
     <div {{body.returnHTMLtag}} class="panel-body" ></div >\
-    <div {{footer.returnHTMLtag}} class="panel-footer"></div>\
+    <div {{footer.returnHTMLtag}} class="panel-footer">Panel Footer</div>\
 </div >\
 '
     var thisPanel = BSJS.inherit(this, new BSJS.obj(options))
+
     this.primary = function () {
         thisPanel.tags.main.element().className = 'panel panel-default'
     }
@@ -60,171 +75,16 @@ BSJS.panel = function (options) {
     }
     return this
 }
+
 BSJS.span = function (options) {
     if (!options || jQuery.type(options) === "string") {
         options = {
             text: options
         }
-    }
-    else {
+    } else {
         options.text = ''
     }
     options.template = '<span {{main.returnHTMLtag}}>' + options.text + '</span>'
     var thisPanel = BSJS.inherit(this, new BSJS.obj(options))
-    return this
-}
-BSJS.datePicker = function (options) {
-    var thisdatePicker = this
-    if (!options) options = {}
-    this.options = options
-    this.options.hideCal = {
-        onClick: thisdatePicker.options.onHide || function () {
-            thisdatePicker.main.hide()
-        }
-    }
-    this.options.saveDate = {
-        onClick: thisdatePicker.options.onSave
-        , params: {
-            value: function () {
-                return thisdatePicker.calendar.element().value
-            }
-        }
-    }
-    this.options.template = '\
-<div id="{{main.id}}" style="float:left;position:absolute">\
-    <input type="date" style="color:black" id="{{calendar.id}}" >\
-    <div style="background-color:grey" >\
-        <span {{hideCal.returnHTMLtag}} style="background-color:grey" >cancel</span>\
-        <span  {{saveDate.returnHTMLtag}} style="background-color:grey;float:right" >save</span>\
-    </div >\
-</div>'
-    var thisdatePicker = BSJS.inherit(this, new BSJS.obj(this.options))
-    return this
-}
-BSJS.progressbar = function (options) { }
-BSJS.objectWorker = function (options) {
-    var thisObjWorker = this
-    this.obj = options.obj
-    options.template = '\
-<div {{main.returnHTMLtag}} class="panel panel-default">\
-    <div class="panel-heading">\
-        <h4 class="panel-title">\
-            <a data-toggle="collapse" href="#collapse{{main.id}}">' + (options.name || options.obj.name || options.obj.title || 'Object') + '\
-            </a>\
-        </h4>\
-    </div>\
-    <div id="collapse{{main.id}}" class="panel-collapse collapse">\
-        <div {{body.returnHTMLtag}} class="panel-body">\
-        </div>\
-    </div>\
-</div>'
-    options.body = []
-
-    function decipher(obj) {
-        for (var propertyName in obj) {
-            var tipe = jQuery.type(obj[propertyName])
-            if (tipe == 'number') tipe = 'string'
-            switch (tipe) {
-                case 'object':
-                    options.body.push(new BSJS.objectWorker({
-                        obj: obj[propertyName]
-                        , name: propertyName
-                    }))
-                    break;
-                case 'string':
-                    options.body.push(new BSJS.stringProperty({
-                        property: obj
-                        , name: propertyName
-                    }))
-                    break;
-                case 'date':
-                    options.body.push(new BSJS.dateProperty({
-                        property: obj[propertyName]
-                        , name: propertyName
-                    }))
-                    break;
-                case 'array':
-                    options.body.push(new BSJS.arrayProperty({
-                        property: obj[propertyName]
-                        , name: propertyName
-                    }))
-                    break;
-                case 'boolean':
-                    options.body.push(new BSJS.booleanProperty({
-                        property: obj[propertyName]
-                        , name: propertyName
-                    }))
-                    break;
-            }
-        }
-    }
-    decipher(thisObjWorker.obj)
-    var thisObjectWorker = BSJS.inherit(this, new BSJS.obj(options))
-    return this
-}
-BSJS.arrayProperty = function (options) {
-    var thisArrProp = this
-    this.arr = options.property
-    options.template = '\
-<div {{main.returnHTMLtag}} class="panel panel-default">\
-    <div class="panel-heading">\
-        <h4 class="panel-title">\
-            <a data-toggle="collapse" href="#collapse{{main.id}}">' + (options.name ? options.name : 'Array') + '\
-            </a>\
-        </h4>\
-    </div>\
-    <div id="collapse{{main.id}}" class="panel-collapse collapse">\
-        <div {{body.returnHTMLtag}} class="panel-body">\
-        </div>\
-    </div>\
-</div>'
-    options.body = []
-    this.arr.forEach(function (a) {
-        var tipe = jQuery.type(a)
-        console.log('tipe', tipe, a)
-        switch (tipe) {
-            case 'object':
-                options.body.push(new BSJS.objectWorker({
-                    obj: a
-                }))
-                break;
-            case 'string':
-                options.body.push(new BSJS.stringProperty({
-                    property: thisArrProp.arr
-                    , name: thisArrProp.arr.indexOf(a)
-                }))
-                break;
-            case 'date':
-                options.body.push(new BSJS.dateProperty({
-                    property: a
-                }))
-                break;
-            case 'array':
-                options.body.push(new BSJS.arrayProperty({
-                    property: a
-                }))
-                break;
-            case 'boolean':
-                options.body.push(new BSJS.booleanProperty({
-                    property: a
-                }))
-                break;
-        }
-    })
-    var thisObjectWorker = BSJS.inherit(this, new BSJS.obj(options))
-    return this
-}
-BSJS.stringProperty = function (options) {
-    this.obj = options.property
-    var thisStr = this
-    options.name = (options.name || options.name == 0) ? options.name : 'String'
-    options.template = '\
-       <div  {{main.returnHTMLtag}}> <span>' + options.name + ':</span><span {{body.returnHTMLtag}}></span>    </div>'
-    options.body = new BSJS.dataConnection({
-        obj: thisStr.obj
-        , prop: options.name
-        , twoWay: true
-    }).marker()
-    var thisObjectWorker = BSJS.inherit(this, new BSJS.obj(options))
     return this
 }
