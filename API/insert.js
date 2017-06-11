@@ -9,7 +9,8 @@ router.post('/', function (req, res) {
     var col = req.body.collection
     var db = req.body.database
     var obj = req.body.obj
-    var url = 'mongodb://localhost:27017/' + db;
+    var url = 'mongodb://testmongofirst:FD2NYlme6rCORhPmrySk4DyMbHDVNm7Tyv3QY4WkzCyqGl2pxRjPadJG0Ql1MKZhR45ast6qxdGo0GbHNpKb8Q==@testmongofirst.documents.azure.com:10255/?ssl=true&replicaSet=globaldb/' + db//'mongodb://localhost:27017/' + db;
+
     console.log(col)
     mongo.connect(url, function (err, db) {
         db.collection(col).insertOne(obj, function (err, results) { res.send(results) })
